@@ -1,0 +1,59 @@
+scheme repo_alg = class
+    type
+        File,       /* variant of a file */
+        Program,    /* version of a program */
+        Files,      /* collection of files */
+        Project     /* project */
+
+    value
+        /* Generators */
+        empty : Project,
+
+        addFile    : File    >< Project -> Project,
+        addProgram : Program >< Project -> Project,
+
+        attachFile : File >< Program >< Project -~-> Project,
+
+        /* Modifiers */
+        detachFile : File >< Program >< Project -~-> Project,
+
+        /* Observers */
+        hasFile     : File >< Project -> Bool,
+        hasProgram  : Program >< Project -> Bool,
+        hasAttached : File >< Program >< Project -~-> Bool,
+        dependsOn   : File >< File >< Project -~-> Bool,
+
+        /* Extra functionality */
+        /* Generators */
+        autoAttachFile : File >< Program >< Project -> Project,
+
+        /* Modifiers */
+        autoDetachFile : File >< Program >< Project -~-> Project,
+
+        /* Observers */
+        backwardDeps : File >< Project -~-> Files,
+        forwardDeps  : File >< Project -~-> Files
+
+    axiom
+        /* observer-empty */
+        all f : File    :- ~hasFile(f, empty),
+        all p : Program :- ~hasProgram(p, empty),
+
+        /* observer-addFile */
+        all proj : Project, f1, f2 : File :-
+            hasFile(f2, addFile(f1, proj)) is f1 = f2 \/ hasFile(f2, proj)
+            pre ~hasFile(f1, proj),
+        all proj : Project, f : File, p : Program :-
+            hasProgram(p, addFile(f, proj)) is hasProgram(p, proj)
+            pre ~hasFile(f, proj),
+        all proj : Project, f1, f2 : File, p : Program :-
+            hasAttached(f2, p, addFile(f1, proj)) is f2 ~= f1 /\ hasAttached(f2, p, proj)
+            pre ~hasFile(f1, proj) /\ hasProgram(p, proj) /\ (f2 ~= f1 => hasFile(f2, proj)),
+        all proj : Project, f1, f2, f3 : File :-
+            dependsOn(f2, f3, addFile(f1, proj)) is f2 ~= f1 /\ f3 ~= f1 /\ dependsOn(f2, f3, proj)
+            pre ~hasFile(f1, proj) /\ (f2 ~= f1 => hasFile(f2, proj)) /\ (f3 ~= f1 => hasFile(f3, proj)),
+        all proj : Project, f1, f2 : File :-
+            backwardDeps(f2, addFile(f1, proj)) is backwardDeps(f2, proj)
+            pre ~hasFile(f1, proj) /\ hasFile(f2, proj)
+
+end
