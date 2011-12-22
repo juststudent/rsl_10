@@ -54,6 +54,9 @@ scheme repo_alg = class
             pre ~hasFile(f1, proj) /\ (f2 ~= f1 => hasFile(f2, proj)) /\ (f3 ~= f1 => hasFile(f3, proj)),
         all proj : Project, f1, f2 : File :-
             backwardDeps(f2, addFile(f1, proj)) is backwardDeps(f2, proj)
+            pre ~hasFile(f1, proj) /\ hasFile(f2, proj),
+        all proj : Project, f1, f2 : File :-
+            forwardDeps(f2, addFile(f1, proj)) is forwardDeps(f2, proj)
             pre ~hasFile(f1, proj) /\ hasFile(f2, proj)
 
 end
