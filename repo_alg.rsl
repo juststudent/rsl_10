@@ -208,6 +208,37 @@ scheme repo_alg = class
         all proj : Project, f1, f2 : File, p1 : Program :-
             forwardDeps(f2, autoDetachFile(f1, p1, proj)) is forwardDeps(f2, proj)
             pre hasFile(f2, proj) /\
-                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj)
+                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj),
+
+        /* ========== MODIFIER-GENERATOR ========== */
+
+        /* detachFile-generator */
+        all proj : Project, f1, f2 : File, p1 : Program :-
+            detachFile(f1, p1, addFile(f2, proj)) is addFile(f2, detachFile(f1, p1, proj))
+            pre ~hasFile(f2, proj) /\
+                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                (all p : Program, f : File :-
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj)),
+        all proj : Project, f1 : File, p1, p2 : Program :-
+            detachFile(f1, p1, addProgram(p2, proj)) is addProgram(p2, detachFile(f1, p1, proj))
+            pre ~hasProgram(p2, proj) /\
+                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                (all p : Program, f : File :-
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj)),
+        all proj : Project, f1, f2 : File, p1, p2 : Program :-
+            detachFile(f1, p1, attachFile(f2, p2, proj)) is
+                if f1 = f2 /\ p1 = p2 then proj
+                                      else attachFile(f2, p2, detachFile(f1, p1, proj)) end
+            pre hasFile(f2, proj) /\ hasProgram(p2, proj) /\
+                (all f : File :- (hasFile(f, proj) /\ dependsOn(f2, f, proj)) => hasAttached(f, p2, proj)) /\
+                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                (all p : Program, f : File :-
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj)),
+        all proj : Project, f1, f2, f3 : File, p1 : Program :-
+            detachFile(f1, p1, addDep(f2, f3, proj)) is addDep(f2, f3, detachFile(f1, p1, proj))
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                (all p : Program, f : File :-
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) =>
+                    ~dependsOn(f, f1, proj) /\ (f1 ~= f3 \/ f ~= f2))
 
 end
