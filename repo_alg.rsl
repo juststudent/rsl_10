@@ -106,6 +106,26 @@ scheme repo_alg = class
             forwardDeps(f2, attachFile(f1, p, proj)) is forwardDeps(f2, proj)
             pre hasFile(f1, proj) /\ hasProgram(p, proj) /\
                 (all f : File :- (hasFile(f, proj) /\ dependsOn(f1, f, proj)) => hasAttached(f, p, proj)) /\
-                hasFile(f2, proj)
+                hasFile(f2, proj),
+
+        /* observer-addDep */
+        all proj : Project, f1, f2, f3 : File :-
+            hasFile(f3, addDep(f1, f2, proj)) is hasFile(f3, proj)
+            pre hasFile(f1, proj) /\ hasFile(f2, proj) /\
+                (all p : Program :- (hasProgram(p, proj) /\ hasAttached(f1, p, proj)) => hasAttached(f2, p, proj)),
+        all proj : Project, f1, f2 : File, p1 : Program :-
+            hasProgram(p1, addDep(f1, f2, proj)) is hasProgram(p1, proj)
+            pre hasFile(f1, proj) /\ hasFile(f2, proj) /\
+                (all p : Program :- (hasProgram(p, proj) /\ hasAttached(f1, p, proj)) => hasAttached(f2, p, proj)),
+        all proj : Project, f1, f2, f3 : File, p1 : Program :- 
+            hasAttached(f3, p1, addDep(f1, f2, proj)) is hasAttached(f3, p1, proj)
+            pre hasFile(f3, proj) /\ hasProgram(p1, proj) /\
+                hasFile(f1, proj) /\ hasFile(f2, proj) /\
+                (all p : Program :- (hasProgram(p, proj) /\ hasAttached(f1, p, proj)) => hasAttached(f2, p, proj)),
+        all proj : Project, f1, f2, f3, f4 : File :-
+            dependsOn(f3, f4, addDep(f1, f2, proj)) is (f1 = f3 /\ f2 = f4) \/ dependsOn(f3, f4, proj)
+            pre hasFile(f3, proj) /\ hasFile(f4, proj) /\
+                hasFile(f1, proj) /\ hasFile(f2, proj) /\
+                (all p : Program :- (hasProgram(p, proj) /\ hasAttached(f1, p, proj)) => hasAttached(f2, p, proj))
 
 end
