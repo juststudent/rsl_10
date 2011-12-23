@@ -185,6 +185,29 @@ scheme repo_alg = class
             pre hasFile(f2, proj) /\
                 hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
                 (all p : Program, f : File :-
-                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj))
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj)),
+
+        /* observer-autoDetachFile */
+        all proj : Project, f1, f2 : File, p1 : Program :-
+            hasFile(f2, autoDetachFile(f1, p1, proj)) is hasFile(f2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj),
+        all proj : Project, f1 : File, p1, p2 : Program :-
+            hasProgram(p2, autoDetachFile(f1, p1, proj)) is hasProgram(p2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj),
+        all proj : Project, f1, f2 : File, p1, p2 : Program :-
+            hasAttached(f2, p2, autoDetachFile(f1, p1, proj)) is (f1 ~= f2 \/ p1 ~= p2) /\ hasAttached(f2, p2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                hasFile(f2, proj) /\ hasProgram(p2, proj),
+        all proj : Project, f1, f2, f3 : File, p1 : Program :-
+            dependsOn(f2, f3, autoDetachFile(f1, p1, proj)) is dependsOn(f2, f3, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj),
+        all proj : Project, f1, f2 : File, p1 : Program :-
+            backwardDeps(f2, autoDetachFile(f1, p1, proj)) is backwardDeps(f2, proj)
+            pre hasFile(f2, proj) /\
+                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj),
+        all proj : Project, f1, f2 : File, p1 : Program :-
+            forwardDeps(f2, autoDetachFile(f1, p1, proj)) is forwardDeps(f2, proj)
+            pre hasFile(f2, proj) /\
+                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj)
 
 end
