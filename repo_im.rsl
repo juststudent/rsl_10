@@ -101,7 +101,13 @@ scheme repo_im = class
         autoDetachFile(f, p, (fs, ps, ds, atts)) as (fs1, ps1, ds1, atts1)
         post fs1 = fs /\ ps1 = ps /\ ds1 = ds /\
              (all file : File, prog : Program :- atts1(prog) = file => atts(prog) = file) /\
-             atts(p) = f /\ atts1(p) ~= f
+             atts(p) = f /\ atts1(p) ~= f,
+
+        backwardDeps : File >< Project -~-> Files
+        backwardDeps(f, (fs, ps, ds, attrs)) as r
+        post (f isin elems r) /\
+             (rng (ds / elems r) <<= elems r)
+        pre f isin elems fs
 
 end
 
