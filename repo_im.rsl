@@ -30,7 +30,12 @@ scheme repo_im = class
         attachFile : File >< Program >< Project -~-> Project
         attachFile(f, p, (fs, ps, ds, atts)) is (fs, ps, ds, atts !! [p +> f])
         pre (f isin elems fs) /\ (p isin elems ps) /\
-            (all file : File :- ((file isin elems fs) /\ ds(f) = file) => atts(p) = file)
+            (all file : File :- ((file isin elems fs) /\ ds(f) = file) => atts(p) = file),
+
+        addDep : File >< File >< Project -~-> Project
+        addDep(f1, f2, (fs, ps, ds, atts)) is (fs, ps, ds !! [f1 +> f2], atts)
+        pre (f1 isin elems fs) /\ (f2 isin elems fs) /\
+            (all prog : Program :- ((prog isin elems ps) /\ atts(prog) = f1) => atts(prog) = f2)
 
 end
 
