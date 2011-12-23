@@ -60,19 +60,75 @@ scheme repo_ex = class
         /* Extra functionality */
 
         autoAttachFile : File >< Program >< Project -~-> Project
-        autoAttachFile(f, p, (fs, ps, ds, atts)) is empty
+        autoAttachFile(f, p, (fs, ps, ds, atts)) is
+            local
+                variable res  : Files := <.f.>,
+                         prev : Files := <..>
+            in
+                while prev ~= res do
+                    prev := res;
+                    for file in fs do
+                        if file isin rng (ds / elems res) then
+                            res := <.file.> ^ res
+                        end
+                    end
+                end;
+                (fs, ps, ds, atts union [ p +> file | file : File :- file isin elems res ])
+            end
         pre f isin elems fs /\ p isin elems ps,
 
         autoDetachFile : File >< Program >< Project -~-> Project
-        autoDetachFile(f, p, (fs, ps, ds, atts)) is empty
+        autoDetachFile(f, p, (fs, ps, ds, atts)) is
+            local
+                variable res  : Files := <.f.>,
+                         prev : Files := <..>
+            in
+                while prev ~= res do
+                    prev := res;
+                    for file in fs do
+                        if ds(file) isin elems res then
+                            res := <.file.> ^ res
+                        end
+                    end
+                end;
+                (fs, ps, ds, [ v +> w | v : Program, w : File :- atts(v) = w /\ ~(v = p /\ w isin elems res) ])
+            end
         pre f isin elems fs /\ p isin elems ps,
 
         backwardDeps : File >< Project -~-> Files
-        backwardDeps(f, (fs, ps, ds, attrs)) is <..>
+        backwardDeps(f, (fs, ps, ds, attrs)) is
+            local
+                variable res  : Files := <.f.>,
+                         prev : Files := <..>
+            in
+                while prev ~= res do
+                    prev := res;
+                    for file in fs do
+                        if ds(file) isin elems res then
+                            res := <.file.> ^ res
+                        end
+                    end
+                end;
+                res
+            end
         pre f isin elems fs,
 
         forwardDeps : File >< Project -~-> Files
-        forwardDeps(f, (fs, ps, ds, attrs)) is <..>
+        forwardDeps(f, (fs, ps, ds, attrs)) is
+            local
+                variable res  : Files := <.f.>,
+                         prev : Files := <..>
+            in
+                while prev ~= res do
+                    prev := res;
+                    for file in fs do
+                        if file isin rng (ds / elems res) then
+                            res := <.file.> ^ res
+                        end
+                    end
+                end;
+                res
+            end
         pre f isin elems fs
 
 end
