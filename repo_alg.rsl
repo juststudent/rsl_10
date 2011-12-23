@@ -35,6 +35,8 @@ scheme repo_alg = class
         forwardDeps  : File >< Project -~-> Files
 
     axiom
+        /* ========== OBSERVER-GENERATOR ========== */
+
         /* observer-empty */
         all f : File    :- ~hasFile(f, empty),
         all p : Program :- ~hasProgram(p, empty),
@@ -146,6 +148,43 @@ scheme repo_alg = class
             pre hasFile(f1, proj) /\ hasProgram(p, proj) /\ hasFile(f2, proj),
         all proj : Project, p : Program, f1, f2 : File :-
             forwardDeps(f2, autoAttachFile(f1, p, proj)) is forwardDeps(f2, proj)
-            pre hasFile(f1, proj) /\ hasProgram(p, proj) /\ hasFile(f2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p, proj) /\ hasFile(f2, proj),
+
+        /* ========== OBSERVER-MODIFIER ========== */
+
+        /* observer-detachFile */
+        all proj : Project, f1, f2 : File, p1 : Program :-
+            hasFile(f2, detachFile(f1, p1, proj)) is hasFile(f2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                (all p : Program, f : File :-
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj)),
+        all proj : Project, f1 : File, p1, p2 : Program :-
+            hasProgram(p2, detachFile(f1, p1, proj)) is hasProgram(p2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                (all p : Program, f : File :-
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj)),
+        all proj : Project, f1, f2 : File, p1, p2 : Program :-
+            hasAttached(f2, p2, detachFile(f1, p1, proj)) is (f1 ~= f2 \/ p1 ~= p2) /\ hasAttached(f2, p2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                hasFile(f2, proj) /\ hasProgram(p2, proj) /\
+                (all p : Program, f : File :-
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj)),
+        all proj : Project, f1, f2, f3 : File, p1 : Program :-
+            dependsOn(f2, f3, detachFile(f1, p1, proj)) is dependsOn(f2, f3, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                (all p : Program, f : File :-
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj)),
+        all proj : Project, f1, f2 : File, p1 : Program :-
+            backwardDeps(f2, detachFile(f1, p1, proj)) is backwardDeps(f2, proj)
+            pre hasFile(f2, proj) /\
+                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                (all p : Program, f : File :-
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj)),
+        all proj : Project, f1, f2 : File, p1 : Program :-
+            forwardDeps(f2, detachFile(f1, p1, proj)) is forwardDeps(f2, proj)
+            pre hasFile(f2, proj) /\
+                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
+                (all p : Program, f : File :-
+                    (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) => ~dependsOn(f, f1, proj))
 
 end
