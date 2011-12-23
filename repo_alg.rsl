@@ -9,8 +9,8 @@ scheme repo_alg = class
         /* Generators */
         empty : Project,
 
-        addFile    : File    >< Project -> Project,
-        addProgram : Program >< Project -> Project,
+        addFile    : File    >< Project -~-> Project,
+        addProgram : Program >< Project -~-> Project,
         attachFile : File >< Program >< Project -~-> Project,
         addDep     : File >< File >< Project -~-> Project,
 
@@ -25,7 +25,7 @@ scheme repo_alg = class
 
         /* Extra functionality */
         /* Generators */
-        autoAttachFile : File >< Program >< Project -> Project,
+        autoAttachFile : File >< Program >< Project -~-> Project,
 
         /* Modifiers */
         autoDetachFile : File >< Program >< Project -~-> Project,
@@ -239,7 +239,7 @@ scheme repo_alg = class
             pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj) /\
                 (all p : Program, f : File :-
                     (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) =>
-                    ~dependsOn(f, f1, proj) /\ (f1 ~= f3 \/ f ~= f2))
+                    ~dependsOn(f, f1, proj) /\ (f1 ~= f3 \/ f ~= f2)),
 
         /* autoDetachFile-generator */
         all proj : Project, f1, f2 : File, p1 : Program :-
