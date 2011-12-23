@@ -241,4 +241,14 @@ scheme repo_alg = class
                     (hasProgram(p, proj) /\ hasFile(f, proj) /\ hasAttached(f, p, proj)) =>
                     ~dependsOn(f, f1, proj) /\ (f1 ~= f3 \/ f ~= f2))
 
+        /* autoDetachFile-generator */
+        all proj : Project, f1, f2 : File, p1 : Program :-
+            autoDetachFile(f1, p1, addFile(f2, proj)) is addFile(f2, autoDetachFile(f1, p1, proj))
+            pre ~hasFile(f2, proj) /\
+                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj),
+        all proj : Project, f1 : File, p1, p2 : Program :-
+            autoDetachFile(f1, p1, addProgram(p2, proj)) is addProgram(p2, autoDetachFile(f1, p1, proj))
+            pre ~hasProgram(p2, proj) /\
+                hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasAttached(f1, p1, proj)
+
 end
