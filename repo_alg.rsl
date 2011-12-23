@@ -126,6 +126,26 @@ scheme repo_alg = class
             dependsOn(f3, f4, addDep(f1, f2, proj)) is (f1 = f3 /\ f2 = f4) \/ dependsOn(f3, f4, proj)
             pre hasFile(f3, proj) /\ hasFile(f4, proj) /\
                 hasFile(f1, proj) /\ hasFile(f2, proj) /\
-                (all p : Program :- (hasProgram(p, proj) /\ hasAttached(f1, p, proj)) => hasAttached(f2, p, proj))
+                (all p : Program :- (hasProgram(p, proj) /\ hasAttached(f1, p, proj)) => hasAttached(f2, p, proj)),
+
+        /* observer-autoAttachFile */
+        all proj : Project, p : Program, f1, f2 : File :-
+            hasFile(f2, autoAttachFile(f1, p, proj)) is hasFile(f2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p, proj),
+        all proj : Project, p1, p2 : Program, f1 : File :-
+            hasProgram(p2, autoAttachFile(f1, p1, proj)) is hasProgram(p2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj),
+        all proj : Project, p1, p2 : Program, f1, f2 : File :-
+            hasAttached(f2, p2, autoAttachFile(f1, p1, proj)) is (f1 = f2 /\ p1 = p2) \/ hasAttached(f2, p2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p1, proj) /\ hasFile(f2, proj) /\ hasProgram(p2, proj),
+        all proj : Project, p : Program, f1, f2, f3 : File :-
+            dependsOn(f2, f3, autoAttachFile(f1, p, proj)) is dependsOn(f2, f3, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p, proj),
+        all proj : Project, p : Program, f1, f2 : File :-
+            backwardDeps(f2, autoAttachFile(f1, p, proj)) is backwardDeps(f2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p, proj) /\ hasFile(f2, proj),
+        all proj : Project, p : Program, f1, f2 : File :-
+            forwardDeps(f2, autoAttachFile(f1, p, proj)) is forwardDeps(f2, proj)
+            pre hasFile(f1, proj) /\ hasProgram(p, proj) /\ hasFile(f2, proj)
 
 end
