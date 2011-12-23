@@ -41,7 +41,13 @@ scheme repo_im = class
         detachFile(f, p, (fs, ps, ds, atts))
             is (fs, ps, ds, [v +> w | v : Program, w : File :- w = atts(v) /\ v isin dom ds /\ ~(v = p /\ w = f)])
         pre (f isin elems fs) /\ (p isin elems ps) /\
-            (all file : File :- ((file isin elems fs) /\ file = atts(p)) => ds(file) ~= f)
+            (all file : File :- ((file isin elems fs) /\ file = atts(p)) => ds(file) ~= f),
+
+        hasFile : File >< Project -> Bool
+        hasFile(f, (fs, ps, ds, atts)) is f isin elems fs,
+
+        hasProgram : Program >< Project -> Bool
+        hasProgram(p, (fs, ps, ds, atts)) is p isin elems ps
 
 end
 
