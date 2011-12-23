@@ -16,6 +16,17 @@ scheme repo_im = class
         /* project */
         Project  = Files >< Programs >< Deps >< Atts
 
+    axiom
+        /* each program is closed over dependency relation on files */
+        all (fs, ps, ds, atts) : Project :-
+            dom attr <<= ps /\
+            rng attr <<= fs /\
+            dom ds <<= fs /\
+            rng ds <<= fs /\
+            (all f1, f2 : File, p : Program :-
+                (p isin elems ps /\ f1 isin elems fs /\ f2 isin elems fs /\
+                 atts(p) = f1 /\ ds(f1) = f2) => atts(p) = f2)
+
     value
         empty : Project = (<..>, <..>, [], []),
 
@@ -67,15 +78,24 @@ scheme repo_im = class
         hasProgram(p, (fs, ps, ds, atts)) as r
         post r = (p isin elems ps),
 
-        hasAttached : File >< Program >< Project -> Bool
+        hasAttached : File >< Program >< Project -~-> Bool
         hasAttached(f, p, (fs, ps, ds, atts)) as r
         post r = (f = atts(p))
         pre (f isin elems fs) /\ (p isin elems ps),
 
-        dependsOn : File >< File >< Project -> Bool
+        dependsOn : File >< File >< Project -~-> Bool
         dependsOn(f1, f2, (fs, ps, ds, atts)) as r
         post r = (f2 = ds(f1))
         pre (f1 isin elems fs) /\ (f2 isin elems fs)
+
+        /* Extra functionality */
+
+        autoAttachFile : File >< Program >< Project -~-> Project
+        autoAttachFile(f, p, (fs, ps, ds, atts)) as (fs1, ps1, ds1, atts1)
+        post fs1 = fs /\ ps1 = ps /\ ds1 = ds /\
+             (all file : File, prog : Program :- atts(prog) = file => atts(prog) = file) /\
+             atts1(p) = f
+        pre f isin elems fs /\ p isin elems ps
 
 end
 
