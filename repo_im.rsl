@@ -47,7 +47,15 @@ scheme repo_im = class
         hasFile(f, (fs, ps, ds, atts)) is f isin elems fs,
 
         hasProgram : Program >< Project -> Bool
-        hasProgram(p, (fs, ps, ds, atts)) is p isin elems ps
+        hasProgram(p, (fs, ps, ds, atts)) is p isin elems ps,
+
+        hasAttached : File >< Program >< Project -> Bool
+        hasAttached(f, p, (fs, ps, ds, atts)) is f = atts(p)
+        pre (f isin elems fs) /\ (p isin elems ps),
+
+        dependsOn : File >< File >< Project -> Bool
+        dependsOn(f1, f2, (fs, ps, ds, atts)) is f2 = ds(f1)
+        pre (f1 isin elems fs) /\ (f2 isin elems fs)
 
 end
 
