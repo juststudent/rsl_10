@@ -20,41 +20,61 @@ scheme repo_im = class
         empty : Project = (<..>, <..>, [], []),
 
         addFile : File >< Project -~-> Project
-        addFile(f, (fs, ps, ds, atts)) is (<.f.>^fs, ps, ds, atts)
+        addFile(f, (fs, ps, ds, atts)) as (fs1, ps1, ds1, atts1)
+        post ps1 = ps /\ ds1 = ds /\ atts1 = atts /\
+             len fs1 > len fs /\
+             (all file : File :- file isin elems fs => file isin elems fs1) /\
+             (all file : File :- file isin elems fs1 => file = f \/ file isin elems fs)
         pre f ~isin elems fs,
 
         addProgram : Program >< Project -~-> Project
-        addProgram(p, (fs, ps, ds, atts)) is (fs, <.p.>^ps, ds, atts)
+        addProgram(p, (fs, ps, ds, atts)) as (fs1, ps1, ds1, atts1)
+        post fs1 = fs /\ ds1 = ds /\ atts1 = atts /\
+             len ps1 > len ps /\
+             (all prog : Program :- prog isin elems ps => prog isin elems ps1) /\
+             (all prog : Program :- prog isin elems ps1 => prog = p \/ prog isin elems ps)
         pre p ~isin elems ps,
 
         attachFile : File >< Program >< Project -~-> Project
-        attachFile(f, p, (fs, ps, ds, atts)) is (fs, ps, ds, atts union [p +> f])
+        attachFile(f, p, (fs, ps, ds, atts)) as (fs1, ps1, ds1, atts1)
+        post fs1 = fs /\ ps1 = ps /\ ds1 = ds /\
+             (all file : File, prog : Program :- atts(prog) = file => atts1(prog) = file) /\
+             (all file : File, prog : Program :- atts1(prog) = file => ((f = file /\ p = prog) \/ atts(prog) = file))
         pre (f isin elems fs) /\ (p isin elems ps) /\
             (all file : File :- ((file isin elems fs) /\ ds(f) = file) => atts(p) = file),
 
         addDep : File >< File >< Project -~-> Project
-        addDep(f1, f2, (fs, ps, ds, atts)) is (fs, ps, ds union [f1 +> f2], atts)
+        addDep(f1, f2, (fs, ps, ds, atts)) as (fs1, ps1, ds1, atts1)
+        post fs1 = fs /\ ps1 = ps /\ atts1 = atts /\
+             (all file1, file2 : File :- ds(file1) = file2 => ds1(file1) = file2) /\
+             (all file1, file2 : File :- ds1(file1) = file2 => ((f1 = file1 /\ f2 = file2) \/ atts(file1) = file2))
         pre (f1 isin elems fs) /\ (f2 isin elems fs) /\
             (all prog : Program :- ((prog isin elems ps) /\ atts(prog) = f1) => atts(prog) = f2),
 
         detachFile : File >< Program >< Project -~-> Project
-        detachFile(f, p, (fs, ps, ds, atts))
-            is (fs, ps, ds, [v +> w | v : Program, w : File :- w = atts(v) /\ v isin dom ds /\ ~(v = p /\ w = f)])
+        detachFile(f, p, (fs, ps, ds, atts)) as (fs1, ps1, ds1, atts1)
+        post fs1 = fs /\ ps1 = ps /\ ds1 = ds /\
+             (all file : File, prog : Program :- atts(prog) = file => ((f = file /\ p = prog) \/ atts1(prog) = file)) /\
+             (all file : File, prog : Program :- atts1(prog) = file => atts(prog) = file)
         pre (f isin elems fs) /\ (p isin elems ps) /\
             (all file : File :- ((file isin elems fs) /\ file = atts(p)) => ds(file) ~= f),
 
         hasFile : File >< Project -> Bool
-        hasFile(f, (fs, ps, ds, atts)) is f isin elems fs,
+        hasFile(f, (fs, ps, ds, atts)) as r
+        post r = (f isin elems fs),
 
         hasProgram : Program >< Project -> Bool
-        hasProgram(p, (fs, ps, ds, atts)) is p isin elems ps,
+        hasProgram(p, (fs, ps, ds, atts)) as r
+        post r = (p isin elems ps),
 
         hasAttached : File >< Program >< Project -> Bool
-        hasAttached(f, p, (fs, ps, ds, atts)) is f = atts(p)
+        hasAttached(f, p, (fs, ps, ds, atts)) as r
+        post r = (f = atts(p))
         pre (f isin elems fs) /\ (p isin elems ps),
 
         dependsOn : File >< File >< Project -> Bool
-        dependsOn(f1, f2, (fs, ps, ds, atts)) is f2 = ds(f1)
+        dependsOn(f1, f2, (fs, ps, ds, atts)) as r
+        post r = (f2 = ds(f1))
         pre (f1 isin elems fs) /\ (f2 isin elems fs)
 
 end
