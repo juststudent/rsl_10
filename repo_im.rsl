@@ -106,6 +106,12 @@ scheme repo_im = class
         backwardDeps : File >< Project -~-> Files
         backwardDeps(f, (fs, ps, ds, attrs)) as r
         post (f isin elems r) /\
+             ({file | file : File :- file isin fs /\ ds(file) isin elems r } <<= elems r)
+        pre f isin elems fs,
+
+        forwardDeps : File >< Project -~-> Files
+        forwardDeps(f, (fs, ps, ds, attrs)) as r
+        post (f isin elems r) /\
              (rng (ds / elems r) <<= elems r)
         pre f isin elems fs
 
