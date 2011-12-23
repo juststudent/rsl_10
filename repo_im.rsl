@@ -17,6 +17,20 @@ scheme repo_im = class
         Project  = Files >< Programs >< Deps >< Atts
 
     value
-        empty : Project = (<..>, <..>, [], [])
-        
+        empty : Project = (<..>, <..>, [], []),
+
+        addFile : File >< Project -~-> Project
+        addFile(f, (fs, ps, ds, atts)) is (<.f.>^fs, ps, ds, atts)
+        pre ~(f isin elems fs),
+
+        addProgram : Program >< Project -~-> Project
+        addProgram(p, (fs, ps, ds, atts)) is (fs, <.p.>^ps, ds, atts)
+        pre ~(p isin elems ps),
+
+        attachFile : File >< Program >< Project -~-> Project
+        attachFile(f, p, (fs, ps, ds, atts)) is (fs, ps, ds, atts !! [p +> f])
+        pre (f isin elems fs) /\ (p isin elems ps) /\
+            (all file : File :- ((file isin elems fs) /\ ds(f) = file) => atts(p) = file)
+
 end
+
