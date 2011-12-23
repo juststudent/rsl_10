@@ -21,21 +21,27 @@ scheme repo_im = class
 
         addFile : File >< Project -~-> Project
         addFile(f, (fs, ps, ds, atts)) is (<.f.>^fs, ps, ds, atts)
-        pre ~(f isin elems fs),
+        pre f ~isin elems fs,
 
         addProgram : Program >< Project -~-> Project
         addProgram(p, (fs, ps, ds, atts)) is (fs, <.p.>^ps, ds, atts)
-        pre ~(p isin elems ps),
+        pre p ~isin elems ps,
 
         attachFile : File >< Program >< Project -~-> Project
-        attachFile(f, p, (fs, ps, ds, atts)) is (fs, ps, ds, atts !! [p +> f])
+        attachFile(f, p, (fs, ps, ds, atts)) is (fs, ps, ds, atts union [p +> f])
         pre (f isin elems fs) /\ (p isin elems ps) /\
             (all file : File :- ((file isin elems fs) /\ ds(f) = file) => atts(p) = file),
 
         addDep : File >< File >< Project -~-> Project
-        addDep(f1, f2, (fs, ps, ds, atts)) is (fs, ps, ds !! [f1 +> f2], atts)
+        addDep(f1, f2, (fs, ps, ds, atts)) is (fs, ps, ds union [f1 +> f2], atts)
         pre (f1 isin elems fs) /\ (f2 isin elems fs) /\
-            (all prog : Program :- ((prog isin elems ps) /\ atts(prog) = f1) => atts(prog) = f2)
+            (all prog : Program :- ((prog isin elems ps) /\ atts(prog) = f1) => atts(prog) = f2),
+
+        detachFile : File >< Program >< Project -~-> Project
+        detachFile(f, p, (fs, ps, ds, atts))
+            is (fs, ps, ds, [v +> w | v : Program, w : File :- w = atts(v) /\ v isin dom ds /\ ~(v = p /\ w = f)])
+        pre (f isin elems fs) /\ (p isin elems ps) /\
+            (all file : File :- ((file isin elems fs) /\ file = atts(p)) => ds(file) ~= f)
 
 end
 
