@@ -1,0 +1,79 @@
+scheme repo_ex = class
+    type
+        Filename = Text,    /* filename */
+        Variant  = Nat,     /* file variant number */
+        Progname = Text,    /* program name */
+        Version  = Nat,     /* program version number */
+
+        File    = Filename >< Variant,  /* file variant */
+        Program = Progname >< Version,  /* program version */
+
+        Files    = File-list,           /* collection of files */
+        Programs = Program-list,        /* collection of programs */
+        Deps     = File -m-> File,      /* dependencies of files */
+        Atts     = Program -m-> File,   /* attached files for each program */
+
+        /* project */
+        Project  = Files >< Programs >< Deps >< Atts
+
+    value
+        empty : Project = (<..>, <..>, [], []),
+
+        addFile : File >< Project -~-> Project
+        addFile(f, (fs, ps, ds, atts)) is (<.f.>^fs, ps, ds, atts)
+        pre f ~isin elems fs,
+
+        addProgram : Program >< Project -~-> Project
+        addProgram(p, (fs, ps, ds, atts)) is (fs, <.p.>^ps, ds, atts)
+        pre p ~isin elems ps,
+
+        attachFile : File >< Program >< Project -~-> Project
+        attachFile(f, p, (fs, ps, ds, atts)) is (fs, ps, ds, atts union [p +> f])
+        pre (f isin elems fs) /\ (p isin elems ps) /\
+            (all file : File :- ((file isin elems fs) /\ ds(f) = file) => atts(p) = file),
+
+        addDep : File >< File >< Project -~-> Project
+        addDep(f1, f2, (fs, ps, ds, atts)) is (fs, ps, ds union [f1 +> f2], atts)
+        pre (f1 isin elems fs) /\ (f2 isin elems fs) /\
+            (all prog : Program :- ((prog isin elems ps) /\ atts(prog) = f1) => atts(prog) = f2),
+
+        detachFile : File >< Program >< Project -~-> Project
+        detachFile(f, p, (fs, ps, ds, atts)) is
+            (fs, ps, ds, [ v +> w | v : Program, w : File :- ~(v = p /\ w = f) /\ atts(v) = w ])
+        pre (f isin elems fs) /\ (p isin elems ps) /\
+            (all file : File :- ((file isin elems fs) /\ file = atts(p)) => ds(file) ~= f),
+
+        hasFile : File >< Project -> Bool
+        hasFile(f, (fs, ps, ds, atts)) is f isin elems fs,
+
+        hasProgram : Program >< Project -> Bool
+        hasProgram(p, (fs, ps, ds, atts)) is p isin elems ps,
+
+        hasAttached : File >< Program >< Project -~-> Bool
+        hasAttached(f, p, (fs, ps, ds, atts)) is atts(p) = f
+        pre (f isin elems fs) /\ (p isin elems ps),
+
+        dependsOn : File >< File >< Project -~-> Bool
+        dependsOn(f1, f2, (fs, ps, ds, atts)) is ds(f1) = f2
+        pre (f1 isin elems fs) /\ (f2 isin elems fs),
+
+        /* Extra functionality */
+
+        autoAttachFile : File >< Program >< Project -~-> Project
+        autoAttachFile(f, p, (fs, ps, ds, atts)) is empty
+        pre f isin elems fs /\ p isin elems ps,
+
+        autoDetachFile : File >< Program >< Project -~-> Project
+        autoDetachFile(f, p, (fs, ps, ds, atts)) is empty
+        pre f isin elems fs /\ p isin elems ps,
+
+        backwardDeps : File >< Project -~-> Files
+        backwardDeps(f, (fs, ps, ds, attrs)) is <..>
+        pre f isin elems fs,
+
+        forwardDeps : File >< Project -~-> Files
+        forwardDeps(f, (fs, ps, ds, attrs)) is <..>
+        pre f isin elems fs
+
+end
+
